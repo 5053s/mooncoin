@@ -381,8 +381,8 @@ caching. A sample config for apache2 could look like:
     SSLCertificateKeyFile /etc/apache2/ssl/server.key
 
     <Location /mooncoinrpc>
-        ProxyPass http://127.0.0.1:9332/
-        ProxyPassReverse http://127.0.0.1:9332/
+        ProxyPass http://127.0.0.1:44664/
+        ProxyPassReverse http://127.0.0.1:44664/
         # optional enable digest auth
         # AuthType Digest
         # ...
