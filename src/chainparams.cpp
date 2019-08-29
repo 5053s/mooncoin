@@ -75,11 +75,11 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 840000;
-        consensus.BIP16Height = 1; // 
-        consensus.BIP34Height = 710000;  // 
-        consensus.BIP34Hash = uint256S("638aa7bcca0f85e05cbf639b37b0b979e9878a67b79408937f900e11865ef88e");
-        consensus.BIP65Height = 1188350; // bab3041e8977e0dc3eeff63fe707b92bde1dd449d8efafb248c27c8264cc311a
-        consensus.BIP66Height = 1184549; // 7aceee012833fa8952f8835d8b1b3ae233cd6ab08fdb27a771d2bd7bdc491894
+        consensus.BIP16Height = 1; // Hopefully also first block
+        consensus.BIP34Height = 710000;  
+        consensus.BIP34Hash = uint256S("fa09d204a83a768ed5a7c8d441fa62f2043abf420cff1226c7b4329aeb9d51cf");
+        consensus.BIP65Height = 918684; // bab3041e8977e0dc3eeff63fe707b92bde1dd449d8efafb248c27c8264cc311a
+        consensus.BIP66Height = 811879; // 7aceee012833fa8952f8835d8b1b3ae233cd6ab08fdb27a771d2bd7bdc491894
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 8 * 60 * 60; //
         consensus.nPowTargetSpacing = 1.5 * 60;
@@ -129,9 +129,8 @@ public:
         // This is fine at runtime as we'll fall back to using them as a oneshot if they don't support the
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
-        vSeeds.ebblace_back("dnsseed01.moonypool.com", "dnsseed01.moonypool.com");
-        vSeeds.ebblace_back("dnsseed02.moonypool.com", "dnsseed02.moonypool.com");
-        vSeeds.ebblace_back("dnsseed03.moonypool.com", "dnsseed03.moonypool.com");
+        vSeeds.ebblace_back("bazco.in", "node0.bazco.in");
+        vSeeds.ebblace_back("bazco.in", "node1.bazco.in");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,3);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,22);
@@ -176,8 +175,8 @@ public:
         strNetworkID = "test";
         consensus.nSubsidyHalvingInterval = 840000;
         consensus.BIP16Height = 0; // always enforce P2SH BIP16 on testnet
-        consensus.BIP34Height = 400000;
-        consensus.BIP34Hash = uint256S("f12cbe7f98f64f7a00e3ed2c833e6c03bbd33faaeb432437e96320087b44c6f9");
+        consensus.BIP34Height = 76;
+        consensus.BIP34Hash = uint256S("8075c771ed8b495ffd943980a95f702ab34fce3c8c54e379548bda33cc8c0573");
         consensus.BIP65Height = 76; // 8075c771ed8b495ffd943980a95f702ab34fce3c8c54e379548bda33cc8c0573
         consensus.BIP66Height = 76; // 8075c771ed8b495ffd943980a95f702ab34fce3c8c54e379548bda33cc8c0573
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
