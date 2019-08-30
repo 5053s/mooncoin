@@ -46,6 +46,9 @@
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>
+// for generateMTRandom
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/mersenne_twister.hpp>
 
 #if defined(NDEBUG)
 # error "Mooncoin cannot be compiled without assertions."
@@ -1091,7 +1094,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
     }
 
     // Check the header
-    if (!CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
+    if (!CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams, true))
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
 
     return true;
@@ -1158,17 +1161,66 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
 
     return ReadRawBlockFromDisk(block, block_pos, message_start);
 }
-
-CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
+int static generateMTRandom(unsigned int s, int range)
 {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
-    // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64)
-        return 0;
+    boost::mt19937 gen(s);
+    boost::uniform_int<> dist(1, range);
+    return dist(gen);
+}
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
-    nSubsidy >>= halvings;
+CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, uint256 prevHash)
+{
+    CAmount nSubsidy = 29531 * COIN; // the lunar cycle is 29.53059 days, so we rounded it up
+
+    std::string cseed_str = prevHash.ToString().substr(7,7);
+    const char* cseed = cseed_str.c_str();
+    long seed = hex2long(cseed);
+
+	// cases for block 1 - 384400
+	if(nHeight <= 100000) {
+                nSubsidy = (1 + generateMTRandom(seed, 1999999)) * COIN;
+                if(gArgs.GetBoolArg("-debug", false)){
+                LogPrintf("nSubsidy = %u \n", nSubsidy);
+                LogPrintf("GetMooncoinBlockSubsidy() End  \n");
+                }
+        } else if(nHeight > 193076 && nHeight < 203158) {
+                nSubsidy = 2519841 * COIN; // for _roughly_ one week, the cost of the Apollo program will be paid back -- 25.4bn MOON!
+        } else if(nHeight <= 203518) {
+                nSubsidy = (1 + generateMTRandom(seed, 999999)) * COIN;
+        } else if(nHeight <= 250000) {
+                nSubsidy = (1 + generateMTRandom(seed, 599999)) * COIN;
+        } else if(nHeight <= 300000) {
+                nSubsidy = (1 + generateMTRandom(seed, 349999)) * COIN;
+        } else if(nHeight <= 350000) {
+                nSubsidy = (1 + generateMTRandom(seed, 174999)) * COIN;
+        } else if(nHeight <= 375000) {
+                nSubsidy = (1 + generateMTRandom(seed, 99999)) * COIN;
+        } else if(nHeight <= 384400) {
+                nSubsidy = (1 + generateMTRandom(seed, 49999)) * COIN;
+    }
+	
+	// cases for block 384401 - 1099999
+ 	if (nHeight % 29531 == 0) {
+                // a prize for ever lunar cycle
+                nSubsidy = nSubsidy * 2;
+    }
+
+	// cases for block 1100000+
+	if (nHeight > 1099999) {
+				nSubsidy = floor( 19697202017 / (floor(nHeight/100000)*100000) ) * COIN;
+    }
+    
+	// cases for block 1250000+
+	if (nHeight > 1249999) {
+				nSubsidy = floor( floor(0.29531 * 19697202017) / (floor(nHeight/100000)*100000) ) * COIN;
+	}
+
+	// case for block 5432100000 onwards
+	if (nHeight > 2147483647) {             // 2147483647 (was 5432099999)
+				nSubsidy = 0 * COIN;
+	}
+
+	
     return nSubsidy;
 }
 
@@ -2045,7 +2097,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
 
-    CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
+    CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), hashPrevBlock);
     if (block.vtx[0]->GetValueOut() > blockReward)
         return state.DoS(100,
                          error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
@@ -3074,7 +3126,7 @@ static bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, 
 static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
+    if (fCheckPOW && !CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams, true))
         return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
 
     return true;
